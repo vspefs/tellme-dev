@@ -1,3 +1,19 @@
+// Copyright (C) 2024 vspefs <vspefs@protonmail.com>
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
 const std = @import("std");
 
 pub fn build(b: *std.Build) void {
@@ -36,6 +52,15 @@ pub const a = struct {
 
 pub fn thatIf(comptime this: type, comptime is: type) bool {
     inline for (@typeInfo(is).@"struct".fields) |required| {
+        if (comptime @hasDecl(required.type, "kind")) {
+            if (comptime @TypeOf(@field(required.type, "kind")) == tellme.a.Kind) {
+                // the right path!
+            } else {
+                continue;
+            }
+        } else {
+            continue;
+        }
         const kind: tellme.a.Kind = comptime @field(required.type, "kind");
         const T: type = comptime @field(required.type, "Type");
         const name: [:0]const u8 = comptime required.name;
@@ -64,6 +89,15 @@ fn ThatType(comptime is: type) type {
         len: {
             var i: usize = 0;
             for (@typeInfo(is).@"struct".fields) |required| {
+                if (@hasDecl(required.type, "kind")) {
+                    if (@TypeOf(@field(required.type, "kind")) == tellme.a.Kind) {
+                        // the right path!
+                    } else {
+                        continue;
+                    }
+                } else {
+                    continue;
+                }
                 if (@field(required.type, "kind") == tellme.a.Kind.field) i = i + 1;
             }
             break :len i;
@@ -71,7 +105,19 @@ fn ThatType(comptime is: type) type {
     ]std.builtin.Type.StructField = comptime undefined;
     var count = 0;
     inline for (@typeInfo(is).@"struct".fields) |required| {
-        if (comptime @field(required.type, "kind") != tellme.a.Kind.field) continue;
+        if (comptime @hasDecl(required.type, "kind")) {
+            if (comptime @TypeOf(@field(required.type, "kind")) == tellme.a.Kind) {
+                if (comptime @field(required.type, "kind") == tellme.a.Kind.field) {
+                    // the right path!
+                } else {
+                    continue;
+                }
+            } else {
+                continue;
+            }
+        } else {
+            continue;
+        }
         fields[count] = comptime .{
             .name = required.name,
             .type = *@field(required.type, "Type"),
@@ -97,8 +143,7 @@ pub fn that(this: anytype, comptime is: type) ThatType(is) {
     ));
 
     var ret: ThatType(is) = undefined;
-    inline for (@typeInfo(is).@"struct".fields) |field| {
-        if (comptime @field(field.type, "kind") != tellme.a.Kind.field) continue;
+    inline for (@typeInfo(ret).@"struct".fields) |field| {
         @field(ret, field.name) = @constCast(&@field(this, field.name));
     }
     return ret;
