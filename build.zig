@@ -143,7 +143,7 @@ pub fn that(this: anytype, comptime is: type) ThatType(is) {
     ));
 
     var ret: ThatType(is) = undefined;
-    inline for (@typeInfo(@Typeof(ret)).@"struct".fields) |field| {
+    inline for (@typeInfo(@TypeOf(ret)).@"struct".fields) |field| {
         @field(ret, field.name) = @constCast(&@field(this, field.name));
     }
     return ret;
