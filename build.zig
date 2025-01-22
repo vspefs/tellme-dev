@@ -121,7 +121,7 @@ fn ThatType(comptime is: type) type {
         fields[count] = comptime .{
             .name = required.name,
             .type = *@field(required.type, "Type"),
-            .default_value = null,
+            .default_value_ptr = null,
             .is_comptime = false,
             .alignment = @alignOf(*@field(required.type, "Type")),
         };
@@ -136,6 +136,7 @@ fn ThatType(comptime is: type) type {
         .layout = @typeInfo(empty).@"struct".layout,
     } });
 }
+/// You should pass a pointer in!
 pub fn that(this: anytype, comptime is: type) ThatType(is) {
     if (comptime !tellme.thatIf(@TypeOf(this.*), is)) @compileError(std.fmt.comptimePrint(
         "{s} does not implement {s}!",
